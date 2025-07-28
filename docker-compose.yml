@@ -1,84 +1,55 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: emr-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: emr_system
-      POSTGRES_USER: emr_user
-      POSTGRES_PASSWORD: emr_password
-      PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "5432:5432"
-    volumes:
-      # Persist database data
-      - postgres_data:/var/lib/postgresql/data
-      # Optional: Add init scripts
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - emr-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U emr_user -d emr_system"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  # EMR Backend Application
   emr-backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: emr-backend
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      # Database connection
-      DB_USERNAME: emr_user
-      DB_PASSWORD: emr_password
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: emr_system
-
-      # Spring configuration
-      SPRING_PROFILES_ACTIVE: docker
-      DDL_AUTO: update
-      SHOW_SQL: false
-      LOG_LEVEL: INFO
-
-      # Server configuration
-      SERVER_PORT: 8080
-
-      # CORS (if you plan to run frontend separately)
-      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
-
     ports:
       - "8080:8080"
-    volumes:
-      # Mount logs directory (optional)
-      - ./logs:/app/logs
-      # Mount uploads directory (optional)
-      - ./uploads:/app/uploads
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_USERNAME=emr_user
+      - DB_PASSWORD=emr_password
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/emrdb
+    depends_on:
+      - postgres
     networks:
       - emr-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v1/actuator/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+    restart: unless-stopped
 
-# Named volumes for data persistence
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: emrdb
+      POSTGRES_USER: emr_user
+      POSTGRES_PASSWORD: emr_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - emr-network
+    restart: unless-stopped
+
+  emr-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080/api
+    depends_on:
+      - emr-backend
+    networks:
+      - emr-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
-    driver: local
 
-# Custom network for service communication
 networks:
   emr-network:
     driver: bridge

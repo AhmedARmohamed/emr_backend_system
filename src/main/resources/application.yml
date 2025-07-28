@@ -1,104 +1,84 @@
 spring:
   application:
-    name: emr-patient-registration
+    name: emr-system
 
-  # Database Configuration
+  profiles:
+    active: dev
+
   datasource:
-    url: jdbc:postgresql://localhost:5432/emr_system
-    username: ${DB_USERNAME:emr_user}
-    password: ${DB_PASSWORD:emr_password}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 20000
+    url: jdbc:h2:mem:emrdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
 
-  # JPA/Hibernate Configuration
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}  # create-drop, create, update, validate
-      naming:
-        physical-strategy: org.hibernate.boot.model.naming.SnakeCasePhysicalNamingStrategy
-    show-sql: ${SHOW_SQL:false}
+      ddl-auto: create-drop
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
 
-  # Security Configuration (simplified - can be enhanced later)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/emr-realm}
+          issuer-uri: http://localhost:8080
 
-  # JSON Configuration
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-    time-zone: Africa/Nairobi
-    date-format: yyyy-MM-dd HH:mm:ss
-
-# Server Configuration
 server:
-  port: ${SERVER_PORT:8080}
+  port: 8080
   servlet:
-    context-path: /api/v1
-  error:
-    include-message: always
-    include-binding-errors: always
+    context-path: /api
 
-# Management Endpoints
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
-      base-path: /actuator
+        include: health,info,metrics
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: always
 
-# Logging Configuration
 logging:
   level:
-    org.haykal: ${LOG_LEVEL:INFO}        # Your package
-    org.springframework.security: INFO
-    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
-  pattern:
-    console: "%d{HH:mm:ss} %-5level %logger{36} - %msg%n"
+    com.healthcare: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
 
-# API Documentation
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-  info:
-    title: EMR Patient Registration API
-    description: Multi-facility EMR system for patient registration and healthcare services
-    version: 1.0.0
+app:
+  jwt:
+    secret: mySecretKey
+    expiration: 86400000 # 24 hours
 
-# Custom EMR Properties
-emr:
-  # Business Configuration
-  business:
-    mrn:
-      format: "{facilityCode}-{sequence:6d}"  # FAC001-000001
-      auto-generate: true
-    patient:
-      duplicate-check:
-        enabled: true
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
 
-  # Security settings
-  security:
-    cors:
-      allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
-      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-      allowed-headers: "*"
+  datasource:
+    url: jdbc:postgresql://localhost:5432/emrdb
+    username: ${DB_USERNAME:emr_user}
+    password: ${DB_PASSWORD:emr_password}
 
-  # File upload
-  file:
-    upload:
-      max-size: 10MB
-      storage-path: ${UPLOAD_PATH:./uploads}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  h2:
+    console:
+      enabled: false
+
+logging:
+  level:
+    com.healthcare: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
