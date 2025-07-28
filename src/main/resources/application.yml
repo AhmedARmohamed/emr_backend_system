@@ -1,0 +1,104 @@
+spring:
+  application:
+    name: emr-patient-registration
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/emr_system
+    username: ${DB_USERNAME:emr_user}
+    password: ${DB_PASSWORD:emr_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+
+  # JPA/Hibernate Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}  # create-drop, create, update, validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.SnakeCasePhysicalNamingStrategy
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Security Configuration (simplified - can be enhanced later)
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/emr-realm}
+
+  # JSON Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Africa/Nairobi
+    date-format: yyyy-MM-dd HH:mm:ss
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api/v1
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging Configuration
+logging:
+  level:
+    org.haykal: ${LOG_LEVEL:INFO}        # Your package
+    org.springframework.security: INFO
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+  pattern:
+    console: "%d{HH:mm:ss} %-5level %logger{36} - %msg%n"
+
+# API Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+  info:
+    title: EMR Patient Registration API
+    description: Multi-facility EMR system for patient registration and healthcare services
+    version: 1.0.0
+
+# Custom EMR Properties
+emr:
+  # Business Configuration
+  business:
+    mrn:
+      format: "{facilityCode}-{sequence:6d}"  # FAC001-000001
+      auto-generate: true
+    patient:
+      duplicate-check:
+        enabled: true
+
+  # Security settings
+  security:
+    cors:
+      allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+
+  # File upload
+  file:
+    upload:
+      max-size: 10MB
+      storage-path: ${UPLOAD_PATH:./uploads}
