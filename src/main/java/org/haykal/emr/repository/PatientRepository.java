@@ -27,7 +27,14 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     boolean existsByMrn(String mrn);
 
-    @Query("SELECT MAX(CAST(SUBSTRING(p.mrn, 4) AS int)) FROM Patient p " +
-            "WHERE p.mrn LIKE CONCAT(:prefix, '%')")
-    Integer findMaxMrnNumber(@Param("prefix") String prefix);
+    // PostgreSQL compatible query for extracting number from MRN
+    @Query(value = "SELECT COALESCE(MAX(CAST(SUBSTRING(mrn FROM :prefixLength + 1) AS INTEGER)), 0) " +
+            "FROM patients WHERE mrn LIKE CONCAT(:prefix, '%')",
+            nativeQuery = true)
+    Integer findMaxMrnNumber(@Param("prefix") String prefix, @Param("prefixLength") int prefixLength);
+
+    // Alternative HQL version if you prefer
+    @Query("SELECT COALESCE(MAX(CAST(FUNCTION('SUBSTRING', p.mrn, :prefixLength + 1) AS INTEGER)), 0) " +
+            "FROM Patient p WHERE p.mrn LIKE CONCAT(:prefix, '%')")
+    Integer findMaxMrnNumberHQL(@Param("prefix") String prefix, @Param("prefixLength") int prefixLength);
 }
