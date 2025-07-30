@@ -1,6 +1,6 @@
 package org.haykal.emr.repository;
 
-import org.haykal.emr.entity.Service;
+import org.haykal.emr.entity.PatientService;
 import org.haykal.emr.entity.ServiceType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,14 +11,14 @@ import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface ServiceRepository extends JpaRepository<Service, UUID> {
+public interface ServiceRepository extends JpaRepository<PatientService, UUID> {
 
 
-    List<Service> findByFacilityId(UUID facilityId);
+    List<PatientService> findByFacilityId(UUID facilityId);
 
-    List<Service> findByType(ServiceType type);
+    List<PatientService> findByType(ServiceType type);
 
-    @Query("SELECT s FROM Service s WHERE s.facility.id = :facilityId AND s.type = :type")
-    List<Service> findByFacilityIdAndType(@Param("facilityId") UUID facilityId,
-                                          @Param("type") ServiceType type);
+    @Query("SELECT s FROM PatientService s WHERE s.facility.id = :facilityId AND s.type = :type")
+    List<PatientService> findByFacilityIdAndType(@Param("facilityId") UUID facilityId,
+                                                 @Param("type") ServiceType type);
 }

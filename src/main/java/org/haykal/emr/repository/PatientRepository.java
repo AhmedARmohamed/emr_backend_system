@@ -9,32 +9,25 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Repository
-public interface PatientRepository extends JpaRepository<PatientRepository, UUID> {
+public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     Optional<Patient> findByMrn(String mrn);
 
+    @Query("SELECT p FROM Patient p WHERE p.facility.id = :facilityId " +
+            "AND (LOWER(p.firstName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(p.lastName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "OR LOWER(p.mrn) LIKE LOWER(CONCAT('%', :search, '%')))")
+    Page<Patient> searchByFacility(@Param("facilityId") Long facilityId,
+                                   @Param("search") String search,
+                                   Pageable pageable);
+
+    Page<Patient> findByFacilityId(Long facilityId, Pageable pageable);
+
     boolean existsByMrn(String mrn);
 
-    Page<Patient> findByFacilityId(UUID facilityId, Pageable pageable);
-
-    @Query("SELECT p FROM Patient p WHERE " +
-            "(:mrn IS NULL OR p.mrn = :mrn) AND " +
-            "(:firstName IS NULL OR LOWER(p.firstName) LIKE LOWER(CONCAT('%', :firstName, '%'))) AND " +
-            "(:lastName IS NULL OR LOWER(p.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))) AND " +
-            "(:facilityId IS NULL OR p.facility.id = :facilityId) AND " +
-            "(:serviceType IS NULL OR EXISTS (SELECT s FROM p.services s WHERE s.type = :serviceType))")
-    Page<Patient> searchPatients(
-            @Param("mrn") String mrn,
-            @Param("firstName") String firstName,
-            @Param("lastName") String lastName,
-            @Param("facilityId") Long facilityId,
-            @Param("serviceType") String serviceType,
-            Pageable pageable
-    );
-
-    @Query("SELECT COUNT(p) FROM Patient p WHERE p.facility.id = :facilityId")
-    UUID countByFacilityId(@Param("facilityId") UUID facilityId);
+    @Query("SELECT MAX(CAST(SUBSTRING(p.mrn, 4) AS int)) FROM Patient p " +
+            "WHERE p.mrn LIKE CONCAT(:prefix, '%')")
+    Integer findMaxMrnNumber(@Param("prefix") String prefix);
 }
