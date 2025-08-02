@@ -17,7 +17,7 @@ public class FacilityController {
     private final FacilityService facilityService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<FacilityDTO>> createFacility(@Valid @RequestBody FacilityDTO dto) {
         FacilityDTO facility = facilityService.createFacility(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -37,7 +37,7 @@ public class FacilityController {
     }
 
     @PostMapping("/{facilityId}/services/{serviceTypeId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN')")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN')")
     public ResponseEntity<ApiResponse<FacilityDTO>> addServiceToFacility(
             @PathVariable Long facilityId,
             @PathVariable Long serviceTypeId) {

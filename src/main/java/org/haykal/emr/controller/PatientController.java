@@ -20,7 +20,7 @@ public class PatientController {
     private final PatientManagementService patientManagementService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF')")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF')")
     public ResponseEntity<ApiResponse<PatientDTO>> createPatient(@Valid @RequestBody PatientDTO dto) {
         PatientDTO patient = patientManagementService.createPatient(dto);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -28,7 +28,7 @@ public class PatientController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF')")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF')")
     public ResponseEntity<ApiResponse<PatientDTO>> updatePatient(
             @PathVariable Long id,
             @Valid @RequestBody PatientDTO dto) {
@@ -37,21 +37,21 @@ public class PatientController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF', 'VIEW_ONLY')")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF', 'VIEW_ONLY')")
     public ResponseEntity<ApiResponse<PatientDTO>> getPatient(@PathVariable Long id) {
         PatientDTO patient = patientManagementService.getPatient(id);
         return ResponseEntity.ok(ApiResponse.success(patient));
     }
 
     @GetMapping("/mrn/{mrn}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF', 'VIEW_ONLY')")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF', 'VIEW_ONLY')")
     public ResponseEntity<ApiResponse<PatientDTO>> getPatientByMrn(@PathVariable String mrn) {
         PatientDTO patient = patientManagementService.getPatientByMrn(mrn);
         return ResponseEntity.ok(ApiResponse.success(patient));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF', 'VIEW_ONLY')")
+//    @PreAuthorize("hasAnyRole('ADMIN', 'FACILITY_ADMIN', 'STAFF', 'VIEW_ONLY')")
     public ResponseEntity<ApiResponse<PageResponse<PatientDTO>>> searchPatients(
             @RequestParam Long facilityId,
             @RequestParam(required = false) String search,
@@ -63,7 +63,7 @@ public class PatientController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deletePatient(@PathVariable Long id) {
         patientManagementService.deletePatient(id);
         return ResponseEntity.ok(ApiResponse.success("Patient deleted successfully", null));
